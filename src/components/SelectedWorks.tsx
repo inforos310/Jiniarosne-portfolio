@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Project } from '../types';
-import { PROJECTS } from '../data/portfolioData';
+import { usePortfolio } from '../context/PortfolioContext';
 
 interface SelectedWorksProps {
   onSelectProject: (project: Project) => void;
@@ -12,6 +12,9 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
   onSelectProject,
   onViewAll,
 }) => {
+  const { data } = usePortfolio();
+  const projects = data.projects;
+
   return (
     <section id="work" className="bg-[#0a0a0a] py-16 md:py-28 relative">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8 lg:px-12">
@@ -49,7 +52,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
               id="view-all-work-btn"
               onClick={() => {
                 if (onViewAll) onViewAll();
-                else onSelectProject(PROJECTS[0]);
+                else if (projects.length > 0) onSelectProject(projects[0]);
               }}
               className="group relative inline-flex items-center justify-center cursor-pointer select-none"
             >
@@ -69,7 +72,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
 
         {/* Bento Grid: 12 cols with alternating 7/5/5/7 spans */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6">
-          {PROJECTS.map((project, index) => {
+          {projects.map((project, index) => {
             return (
               <motion.div
                 key={project.id}
@@ -83,9 +86,9 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                   ease: [0.25, 0.1, 0.25, 1],
                 }}
                 onClick={() => onSelectProject(project)}
-                className={`${project.colSpan} group relative bg-[#141414]/80 border border-white/5 hover:border-white/15 rounded-3xl overflow-hidden cursor-pointer transform-gpu transition-all duration-300`}
+                className={`${project.colSpan || 'md:col-span-6'} group relative bg-[#141414]/80 border border-white/5 hover:border-white/15 rounded-3xl overflow-hidden cursor-pointer transform-gpu transition-all duration-300`}
               >
-                <div className={`w-full ${project.aspectRatio} relative overflow-hidden`}>
+                <div className={`w-full ${project.aspectRatio || 'aspect-[16/10]'} relative overflow-hidden`}>
                   {/* Background Image with smooth zoom on hover */}
                   <img
                     src={project.image}
@@ -117,7 +120,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                   <div className="absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-6 md:p-8 z-20">
                     {/* Top tags on hover */}
                     <div className="flex flex-wrap gap-1.5">
-                      {project.tags.slice(0, 3).map((tag) => (
+                      {(project.tags || []).slice(0, 3).map((tag) => (
                         <span
                           key={tag}
                           className="text-[10px] uppercase tracking-wider text-white/80 bg-white/10 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-sm"
@@ -161,3 +164,4 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
     </section>
   );
 };
+

@@ -1,16 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import Hls from 'hls.js';
 import gsap from 'gsap';
-import { SOCIAL_LINKS } from '../data/portfolioData';
+import { Lock } from 'lucide-react';
+import { usePortfolio } from '../context/PortfolioContext';
 
 interface ContactFooterProps {
   onOpenResume?: () => void;
+  onOpenAdmin?: () => void;
 }
 
 const HLS_SOURCE = 'https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8';
 const MARQUEE_TEXT = 'BUILDING SMART DIGITAL SOLUTIONS • ';
 
-export const ContactFooter: React.FC<ContactFooterProps> = ({ onOpenResume }) => {
+export const ContactFooter: React.FC<ContactFooterProps> = ({ onOpenResume, onOpenAdmin }) => {
+  const { data } = usePortfolio();
+  const { hero, socialLinks } = data;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const marqueeRef = useRef<HTMLDivElement | null>(null);
 
@@ -20,6 +24,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({ onOpenResume }) =>
     if (!video) return;
 
     let hls: Hls | null = null;
+    const source = hero.videoUrl || HLS_SOURCE;
 
     if (Hls.isSupported()) {
       hls = new Hls({
@@ -27,13 +32,13 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({ onOpenResume }) =>
         enableWorker: true,
         lowLatencyMode: true,
       });
-      hls.loadSource(HLS_SOURCE);
+      hls.loadSource(source);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(() => {});
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = HLS_SOURCE;
+      video.src = source;
       video.addEventListener('loadedmetadata', () => {
         video.play().catch(() => {});
       });
@@ -42,7 +47,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({ onOpenResume }) =>
     return () => {
       if (hls) hls.destroy();
     };
-  }, []);
+  }, [hero.videoUrl]);
 
   // GSAP Marquee animation: xPercent: -50, duration: 40, ease: "none", repeat: -1
   useEffect(() => {
@@ -110,14 +115,14 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({ onOpenResume }) =>
         {/* Email CTA Button with accent ring on hover */}
         <a
           id="contact-email-btn"
-          href="mailto:info.ros310@gmail.com"
+          href={`mailto:${hero.email || 'info.ros310@gmail.com'}`}
           className="group relative inline-flex items-center rounded-full text-[11px] font-bold uppercase tracking-[0.2em] cursor-pointer select-none transition-all duration-300 hover:scale-105"
         >
           {/* Accent ring */}
           <div className="absolute inset-[-1px] rounded-full accent-ring opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           <div className="relative z-10 flex items-center gap-3 bg-white text-black group-hover:bg-[#141414] group-hover:text-white px-8 sm:px-10 py-4 rounded-full font-bold transition-all duration-300 border border-transparent group-hover:border-white/20 shadow-2xl">
-            <span>info.ros310@gmail.com</span>
+            <span>{hero.email || 'info.ros310@gmail.com'}</span>
             <span className="text-[11px] transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5">
               ↗
             </span>
@@ -136,14 +141,14 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({ onOpenResume }) =>
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
           <span className="text-[10px] text-white/50 uppercase tracking-[0.1em] font-medium">
-            Available for projects
+            {hero.availabilityText || 'Available for projects'}
           </span>
           <span className="text-[10px] text-white/30 uppercase tracking-[0.1em] hidden sm:inline">• Worldwide</span>
         </div>
 
         {/* Social Links */}
         <div className="flex items-center gap-6 sm:gap-8">
-          {SOCIAL_LINKS.map((link) => (
+          {(socialLinks || []).map((link) => (
             <a
               key={link.name}
               id={`social-link-${link.name.toLowerCase()}`}
@@ -163,11 +168,24 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({ onOpenResume }) =>
               Resume
             </button>
           )}
+
+          {/* Admin Studio Trigger */}
+          {onOpenAdmin && (
+            <button
+              id="footer-admin-trigger-btn"
+              onClick={onOpenAdmin}
+              title="Open Admin Studio (Alt+A)"
+              className="group flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] text-white/40 hover:text-white uppercase font-mono tracking-wider transition-all duration-200 border border-white/5 hover:border-white/15 cursor-pointer"
+            >
+              <Lock size={10} className="text-[#89AACC] group-hover:rotate-12 transition-transform" />
+              <span>Admin Studio</span>
+            </button>
+          )}
         </div>
 
         {/* Copyright */}
         <div className="text-[10px] text-white/30 font-mono uppercase tracking-wider">
-          © {new Date().getFullYear()} Jinia Alam Rosne. All rights reserved.
+          © {new Date().getFullYear()} {hero.name || 'Jinia Alam Rosne'}. All rights reserved.
         </div>
       </div>
     </footer>

@@ -1,13 +1,16 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { JournalArticle } from '../types';
-import { JOURNAL_ARTICLES } from '../data/portfolioData';
+import { usePortfolio } from '../context/PortfolioContext';
 
 interface JournalProps {
   onSelectArticle: (article: JournalArticle) => void;
 }
 
 export const Journal: React.FC<JournalProps> = ({ onSelectArticle }) => {
+  const { data } = usePortfolio();
+  const articles = data.articles;
+
   return (
     <section id="journal" className="bg-[#0a0a0a] py-16 md:py-28 relative border-t border-white/5">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8 lg:px-12">
@@ -43,7 +46,9 @@ export const Journal: React.FC<JournalProps> = ({ onSelectArticle }) => {
           <div className="hidden md:block">
             <button
               id="view-all-journal-btn"
-              onClick={() => onSelectArticle(JOURNAL_ARTICLES[0])}
+              onClick={() => {
+                if (articles.length > 0) onSelectArticle(articles[0]);
+              }}
               className="group relative inline-flex items-center justify-center cursor-pointer select-none"
             >
               <div className="absolute inset-[-1px] rounded-full accent-ring opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -61,7 +66,7 @@ export const Journal: React.FC<JournalProps> = ({ onSelectArticle }) => {
 
         {/* 4 Horizontal Pill List Items */}
         <div className="flex flex-col gap-4 sm:gap-5">
-          {JOURNAL_ARTICLES.map((article, index) => {
+          {articles.map((article, index) => {
             return (
               <motion.div
                 key={article.id}
@@ -128,3 +133,4 @@ export const Journal: React.FC<JournalProps> = ({ onSelectArticle }) => {
     </section>
   );
 };
+

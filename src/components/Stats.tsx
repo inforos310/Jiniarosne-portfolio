@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { STATS } from '../data/portfolioData';
+import { usePortfolio } from '../context/PortfolioContext';
 
 export const Stats: React.FC = () => {
+  const { data } = usePortfolio();
+  const stats = data.stats;
+
   return (
     <section id="stats" className="bg-[#0a0a0a] py-20 md:py-32 relative border-t border-white/5">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8 lg:px-12">
@@ -23,11 +26,11 @@ export const Stats: React.FC = () => {
 
         {/* 3-column grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center">
-          {STATS.map((stat, index) => {
+          {stats.map((stat, index) => {
             return (
               <motion.div
-                key={stat.id}
-                id={`stat-card-${stat.id}`}
+                key={stat.id || index}
+                id={`stat-card-${stat.id || index}`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
@@ -63,3 +66,4 @@ export const Stats: React.FC = () => {
     </section>
   );
 };
+

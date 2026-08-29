@@ -1,25 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import gsap from 'gsap';
+import { usePortfolio } from '../context/PortfolioContext';
 
 interface HeroProps {
   onSeeWorks: () => void;
   onReachOut: () => void;
 }
 
-const ROLES = [
-  'Brand Identity Designer',
-  'AI Automation Specialist',
-  'Creative',
-  'Digital Solutions Expert',
-];
-
-const HLS_SOURCE = 'https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8';
-
 export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
+  const { data } = usePortfolio();
+  const { hero } = data;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const heroContainerRef = useRef<HTMLDivElement | null>(null);
   const [roleIndex, setRoleIndex] = useState(0);
+
+  const roles = hero.roles && hero.roles.length > 0 ? hero.roles : ['Brand Identity Designer'];
+  const hlsSource = hero.videoUrl || 'https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8';
 
   // Initialize HLS video stream
   useEffect(() => {
@@ -34,15 +31,13 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
         enableWorker: true,
         lowLatencyMode: true,
       });
-      hls.loadSource(HLS_SOURCE);
+      hls.loadSource(hlsSource);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(() => {
-          // Autoplay policy fallback
-        });
+        video.play().catch(() => {});
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = HLS_SOURCE;
+      video.src = hlsSource;
       video.addEventListener('loadedmetadata', () => {
         video.play().catch(() => {});
       });
@@ -53,16 +48,17 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
         hls.destroy();
       }
     };
-  }, []);
+  }, [hlsSource]);
 
   // Role cycler every 2s
   useEffect(() => {
+    if (roles.length <= 1) return;
     const interval = setInterval(() => {
-      setRoleIndex((prev) => (prev + 1) % ROLES.length);
+      setRoleIndex((prev) => (prev + 1) % roles.length);
     }, 2000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [roles.length]);
 
   // GSAP Entrance Animations
   useEffect(() => {
@@ -120,12 +116,12 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
       <main className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center pt-24 pb-16">
         {/* Eyebrow */}
         <span className="blur-in text-[10px] text-white/40 uppercase tracking-[0.4em] mb-8 block select-none">
-          COLLECTION &apos;26
+          {hero.collectionYear || "COLLECTION '26"}
         </span>
 
         {/* Name Reveal with text glow */}
         <h1 className="name-reveal text-6xl sm:text-7xl md:text-8xl lg:text-[100px] font-display italic leading-[0.85] tracking-tight text-white mb-8 text-glow select-none">
-          Jinia Alam Rosne
+          {hero.name || 'Jinia Alam Rosne'}
         </h1>
 
         {/* Role cycler */}
@@ -136,15 +132,15 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
               key={roleIndex}
               className="font-display italic text-[#89AACC] animate-role-fade-in inline-block"
             >
-              {ROLES[roleIndex]}
+              {roles[roleIndex % roles.length]}
             </span>{' '}
-            based in Bangladesh.
+            {hero.locationText || 'based in Bangladesh.'}
           </p>
         </div>
 
         {/* Description */}
         <p className="blur-in text-[13px] text-white/40 max-w-[420px] leading-relaxed mb-12 uppercase tracking-wide">
-          Specializing in AI Automation and Digital Solutions, creating clear visual identities and smart digital experiences.
+          {hero.bio || 'Specializing in AI Automation and Digital Solutions, creating clear visual identities and smart digital experiences.'}
         </p>
 
         {/* CTA Buttons */}
@@ -154,14 +150,14 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
             onClick={onSeeWorks}
             className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-black rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-transparent hover:text-white border border-transparent hover:border-white/20 transition-all cursor-pointer select-none"
           >
-            See Works
+            {hero.primaryCtaText || 'See Works'}
           </button>
           <button
             id="hero-reach-out-btn"
             onClick={onReachOut}
             className="px-8 sm:px-10 py-3.5 sm:py-4 border border-white/20 text-white rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all cursor-pointer select-none"
           >
-            Reach out
+            {hero.secondaryCtaText || 'Reach out'}
           </button>
         </div>
       </main>
@@ -178,3 +174,4 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
     </section>
   );
 };
+

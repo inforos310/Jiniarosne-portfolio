@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExplorationItem } from '../types';
-import { EXPLORATIONS } from '../data/portfolioData';
+import { usePortfolio } from '../context/PortfolioContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,6 +11,9 @@ interface ExplorationsProps {
 }
 
 export const Explorations: React.FC<ExplorationsProps> = ({ onSelectExploration }) => {
+  const { data } = usePortfolio();
+  const explorations = data.explorations;
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pinnedContentRef = useRef<HTMLDivElement | null>(null);
   const colLeftRef = useRef<HTMLDivElement | null>(null);
@@ -72,8 +75,8 @@ export const Explorations: React.FC<ExplorationsProps> = ({ onSelectExploration 
     };
   }, []);
 
-  const leftItems = EXPLORATIONS.filter((_, idx) => idx % 2 === 0);
-  const rightItems = EXPLORATIONS.filter((_, idx) => idx % 2 !== 0);
+  const leftItems = explorations.filter((_, idx) => idx % 2 === 0);
+  const rightItems = explorations.filter((_, idx) => idx % 2 !== 0);
 
   return (
     <section
@@ -143,7 +146,7 @@ export const Explorations: React.FC<ExplorationsProps> = ({ onSelectExploration 
                 key={item.id}
                 id={`exploration-card-${item.id}`}
                 onClick={() => onSelectExploration(item)}
-                className={`group relative aspect-square w-full max-w-[260px] sm:max-w-[320px] rounded-2xl overflow-hidden bg-[#141414]/90 border border-white/10 hover:border-white/20 shadow-2xl p-2.5 cursor-pointer transform-gpu ${item.rotation} hover:rotate-0 hover:scale-105 transition-all duration-500`}
+                className={`group relative aspect-square w-full max-w-[260px] sm:max-w-[320px] rounded-2xl overflow-hidden bg-[#141414]/90 border border-white/10 hover:border-white/20 shadow-2xl p-2.5 cursor-pointer transform-gpu ${item.rotation || '-rotate-2'} hover:rotate-0 hover:scale-105 transition-all duration-500`}
               >
                 {/* Image container */}
                 <div className="w-full h-full rounded-xl overflow-hidden relative">
@@ -187,7 +190,7 @@ export const Explorations: React.FC<ExplorationsProps> = ({ onSelectExploration 
                 key={item.id}
                 id={`exploration-card-${item.id}`}
                 onClick={() => onSelectExploration(item)}
-                className={`group relative aspect-square w-full max-w-[260px] sm:max-w-[320px] rounded-2xl overflow-hidden bg-[#141414]/90 border border-white/10 hover:border-white/20 shadow-2xl p-2.5 cursor-pointer transform-gpu ${item.rotation} hover:rotate-0 hover:scale-105 transition-all duration-500`}
+                className={`group relative aspect-square w-full max-w-[260px] sm:max-w-[320px] rounded-2xl overflow-hidden bg-[#141414]/90 border border-white/10 hover:border-white/20 shadow-2xl p-2.5 cursor-pointer transform-gpu ${item.rotation || 'rotate-2'} hover:rotate-0 hover:scale-105 transition-all duration-500`}
               >
                 {/* Image container */}
                 <div className="w-full h-full rounded-xl overflow-hidden relative">

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Download, Mail, MapPin, Briefcase, GraduationCap, CheckCircle2 } from 'lucide-react';
-import { RESUME_DATA } from '../data/portfolioData';
+import { usePortfolio } from '../context/PortfolioContext';
 
 interface ResumeModalProps {
   isOpen: boolean;
@@ -9,6 +9,9 @@ interface ResumeModalProps {
 }
 
 export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => {
+  const { data } = usePortfolio();
+  const resume = data.resume;
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -85,19 +88,19 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 pb-8 border-b border-stroke">
                 <div>
                   <h1 className="text-3xl sm:text-4xl md:text-5xl font-display italic text-text-primary mb-2">
-                    {RESUME_DATA.name}
+                    {resume.name}
                   </h1>
                   <p className="text-sm sm:text-base text-[#89AACC] font-medium mb-3">
-                    {RESUME_DATA.title}
+                    {resume.title}
                   </p>
                   <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
                     <div className="flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5" />
-                      <span>{RESUME_DATA.location}</span>
+                      <span>{resume.location}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5" />
-                      <span>{RESUME_DATA.email}</span>
+                      <span>{resume.email}</span>
                     </div>
                   </div>
                 </div>
@@ -115,7 +118,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
                   Executive Summary
                 </h2>
                 <p className="text-sm sm:text-base text-muted/95 leading-relaxed">
-                  {RESUME_DATA.summary}
+                  {resume.summary}
                 </p>
               </div>
 
@@ -125,7 +128,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
                   Core Expertise & Tooling
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {RESUME_DATA.coreSkills.map((skill, idx) => (
+                  {(resume.coreSkills || []).map((skill, idx) => (
                     <div
                       key={idx}
                       className="flex items-center gap-2.5 p-2.5 rounded-xl bg-bg border border-stroke/70 text-xs text-text-primary font-medium"
@@ -145,7 +148,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
                 </h2>
 
                 <div className="space-y-6">
-                  {RESUME_DATA.experience.map((exp, idx) => (
+                  {(resume.experience || []).map((exp, idx) => (
                     <div
                       key={idx}
                       className="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-px before:bg-stroke last:before:bottom-2"
@@ -170,7 +173,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
                   <GraduationCap className="w-3.5 h-3.5" />
                   <span>Education</span>
                 </h2>
-                {RESUME_DATA.education.map((edu, idx) => (
+                {(resume.education || []).map((edu, idx) => (
                   <div key={idx} className="p-4 rounded-2xl bg-bg border border-stroke/70">
                     <div className="flex justify-between items-start">
                       <div>
@@ -189,3 +192,4 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
     </AnimatePresence>
   );
 };
+
