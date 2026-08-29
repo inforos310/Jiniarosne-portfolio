@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { AnimatePresence } from 'motion/react';
-import { Shield, Sparkles } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Shield, Sparkles, Eye, X, ArrowUpRight } from 'lucide-react';
 
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
@@ -19,6 +19,8 @@ import { LightboxModal } from './components/LightboxModal';
 import { ResumeModal } from './components/ResumeModal';
 import { AdminAuthModal } from './components/admin/AdminAuthModal';
 import { AdminModal } from './components/admin/AdminModal';
+import { AdminLayout } from './components/admin/AdminLayout';
+import { AdminLoginView } from './components/admin/AdminLoginView';
 
 import { PortfolioProvider, usePortfolio } from './context/PortfolioContext';
 import { initAnalytics } from './utils/analytics';
@@ -27,7 +29,13 @@ import { Project, JournalArticle, ExplorationItem } from './types';
 gsap.registerPlugin(ScrollTrigger);
 
 function PortfolioMain() {
-  const { isUnlocked } = usePortfolio();
+  const {
+    isUnlocked,
+    isPreviewMode,
+    setIsPreviewMode,
+    isDraftModified,
+    publishToLiveWebsite,
+  } = usePortfolio();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeSection, setActiveSection] = useState<string>('hero');
@@ -40,15 +48,48 @@ function PortfolioMain() {
   const [isAdminAuthOpen, setIsAdminAuthOpen] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
 
+  // Check URL / hash for direct admin view
+  const [currentRoute, setCurrentRoute] = useState<string>(() => {
+    const hash = window.location.hash;
+    const path = window.location.pathname;
+    if (path.startsWith('/admin') || hash.startsWith('#/admin') || hash === '#admin') {
+      return 'admin';
+    }
+    return 'public';
+  });
+
   const lenisRef = useRef<Lenis | null>(null);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const path = window.location.pathname;
+      if (path.startsWith('/admin') || hash.startsWith('#/admin') || hash === '#admin') {
+        setCurrentRoute('admin');
+      } else {
+        setCurrentRoute('public');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+    };
+  }, []);
 
   // Initialize Telemetry Analytics tracking engine
   useEffect(() => {
-    initAnalytics();
-  }, []);
+    if (currentRoute === 'public') {
+      initAnalytics();
+    }
+  }, [currentRoute]);
 
   // Initialize Lenis smooth scroll and connect to GSAP ScrollTrigger
   useEffect(() => {
+    if (currentRoute !== 'public') return;
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -73,10 +114,12 @@ function PortfolioMain() {
       lenis.destroy();
       lenisRef.current = null;
     };
-  }, []);
+  }, [currentRoute]);
 
   // Update active section based on scroll position
   useEffect(() => {
+    if (currentRoute !== 'public') return;
+
     const sections = ['hero', 'work', 'journal', 'explorations', 'stats', 'contact'];
 
     const handleScroll = () => {
@@ -97,7 +140,7 @@ function PortfolioMain() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [currentRoute]);
 
   // Keyboard shortcut listener for opening Admin panel (Alt + A or Ctrl + Shift + A)
   useEffect(() => {
@@ -131,8 +174,44 @@ function PortfolioMain() {
     }
   };
 
+  // If full-page admin route is requested
+  if (currentRoute === 'admin') {
+    if (!isUnlocked) {
+      return <AdminLoginView onSuccess={() => setCurrentRoute('admin')} />;
+    }
+    return <AdminLayout />;
+  }
+
   return (
     <div className="relative min-h-screen bg-bg text-text-primary selection:bg-[#4E85BF] selection:text-white font-body">
+      {/* Draft Preview Floating Banner */}
+      {isPreviewMode && (
+        <div className="sticky top-0 z-[100] bg-indigo-950/90 backdrop-blur-md border-b border-indigo-500/30 px-4 py-2.5 flex items-center justify-between text-indigo-100 text-xs font-mono">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+            <span>
+              <strong>Draft Preview Mode</strong> — Showing unpublished staging changes.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => publishToLiveWebsite()}
+              className="px-3 py-1 bg-white text-black font-semibold rounded-lg hover:bg-indigo-200 transition-colors text-[11px]"
+            >
+              Publish Now
+            </button>
+            <button
+              onClick={() => setIsPreviewMode(false)}
+              className="p-1 text-indigo-300 hover:text-white"
+              title="Exit Preview Mode"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Loading Screen Overlay */}
       <AnimatePresence mode="wait">
         {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}

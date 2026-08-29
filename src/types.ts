@@ -1,11 +1,21 @@
+export interface NavbarConfig {
+  initials: string;
+  name: string;
+  role: string;
+  links: Array<{ label: string; target: string }>;
+  sayHiText: string;
+  sayHiTarget: string;
+}
+
 export interface Project {
   id: string;
   title: string;
   category: string;
   tagline: string;
-  colSpan: string; // e.g. "md:col-span-7" | "md:col-span-5"
-  aspectRatio: string;
+  colSpan?: string; // e.g. "md:col-span-7" | "md:col-span-5"
+  aspectRatio?: string;
   image: string;
+  gallery?: string[];
   tags: string[];
   description: string;
   challenge: string;
@@ -15,6 +25,9 @@ export interface Project {
   client: string;
   metrics?: string;
   link?: string;
+  displayOrder?: number;
+  status?: 'published' | 'draft';
+  published?: boolean;
 }
 
 export interface JournalArticle {
@@ -27,6 +40,9 @@ export interface JournalArticle {
   summary: string;
   image: string;
   content: string[];
+  displayOrder?: number;
+  status?: 'published' | 'draft';
+  published?: boolean;
 }
 
 export interface ExplorationItem {
@@ -34,16 +50,19 @@ export interface ExplorationItem {
   title: string;
   category: string;
   image: string;
-  rotation: string;
+  rotation?: string;
   description: string;
   tags: string[];
+  displayOrder?: number;
 }
 
 export interface StatItem {
   id: string;
   value: string;
+  suffix?: string;
   label: string;
   description: string;
+  displayOrder?: number;
 }
 
 export interface SocialLink {
@@ -96,6 +115,7 @@ export interface CustomCodeConfig {
 
 export interface PortfolioDataState {
   hero: HeroConfig;
+  navbar?: NavbarConfig;
   projects: Project[];
   articles: JournalArticle[];
   explorations: ExplorationItem[];
@@ -105,27 +125,48 @@ export interface PortfolioDataState {
   customCode: CustomCodeConfig;
 }
 
+export interface MediaItem {
+  id: string;
+  fileName: string;
+  originalName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  mimeType: string;
+  storageProvider?: 'supabase' | 'local';
+  bucketName?: string;
+  storagePath?: string;
+  caption?: string;
+  dimensions?: { width?: number; height?: number };
+  createdAt: string;
+}
+
+export interface SupabaseStorageConfig {
+  url: string;
+  anonKey: string;
+  serviceRoleKey?: string;
+  bucket: string;
+  isEnabled: boolean;
+}
+
 export interface ClickEvent {
   id: string;
   timestamp: number;
   timeFormatted: string;
-  target: string;
+  target?: string;
+  elementId?: string;
+  eventName?: string;
   label: string;
   section: string;
-  elementType: string;
+  elementType?: string;
   coordinates?: { x: number; y: number };
+  metadata?: Record<string, any>;
 }
 
 export interface VisitorSession {
   sessionId: string;
   visitorId: string;
   ip: string;
-  location: {
-    city: string;
-    country: string;
-    countryCode: string;
-    flag: string;
-  };
   device: {
     type: 'Desktop' | 'Mobile' | 'Tablet';
     browser: string;
@@ -138,8 +179,38 @@ export interface VisitorSession {
   lastActiveTime: number;
   durationSeconds: number;
   isOnline: boolean;
-  maxScrollDepth: number; // 0 - 100
+  isReturning: boolean;
+  pageViews: number;
   visitedSections: string[];
+  maxScrollDepth: number;
   clicks: ClickEvent[];
-  notes?: string;
+  createdAt?: string;
+}
+
+export interface AnalyticsDashboardData {
+  summary: {
+    totalVisitors: number;
+    uniqueVisitors: number;
+    visitorsToday: number;
+    avgDurationSeconds: number;
+    totalPageViews: number;
+    totalClicks: number;
+    mostViewedSection: string;
+    mostClickedButton: string;
+    returningVisitors: number;
+  };
+  topElements: Array<{
+    elementId: string;
+    label: string;
+    section: string;
+    count: number;
+  }>;
+  timeSeries: Array<{
+    date: string;
+    visitors: number;
+    pageViews: number;
+    clicks: number;
+  }>;
+  recentSessions: VisitorSession[];
+  recentEvents: ClickEvent[];
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, KeyRound, X, ShieldCheck, AlertCircle, ArrowRight } from 'lucide-react';
+import { Lock, KeyRound, X, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext';
 
 interface AdminAuthModalProps {
@@ -14,36 +14,46 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { unlockAdmin, adminPinHint } = usePortfolio();
+  const { loginAdmin, adminPinHint } = usePortfolio();
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setPin('');
       setError(false);
       setErrorMessage('');
+      setLoading(false);
     }
   }, [isOpen]);
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!pin) {
+  const verifyPin = async (candidatePin: string) => {
+    if (!candidatePin) {
       setError(true);
-      setErrorMessage('Please enter your 4-digit PIN.');
+      setErrorMessage('Please enter your admin passcode.');
       return;
     }
 
-    const success = unlockAdmin(pin);
-    if (success) {
+    setLoading(true);
+    setError(false);
+    const res = await loginAdmin(candidatePin);
+    setLoading(false);
+
+    if (res.success) {
       setError(false);
       onSuccess();
     } else {
       setError(true);
-      setErrorMessage('Incorrect PIN. (Hint: Default is 2026)');
+      setErrorMessage(res.error || 'Incorrect passcode. (Default PIN: 2026)');
       setPin('');
     }
+  };
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    verifyPin(pin);
   };
 
   const handleKeyPress = (num: string) => {
@@ -52,13 +62,7 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
       setPin(newPin);
       setError(false);
       if (newPin.length === 4) {
-        // Auto-check if 4 digits
-        setTimeout(() => {
-          const success = unlockAdmin(newPin);
-          if (success) {
-            onSuccess();
-          }
-        }, 150);
+        verifyPin(newPin);
       }
     }
   };
@@ -78,7 +82,7 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            className="absolute inset-0 bg-black/85 backdrop-blur-md"
           />
 
           {/* Dialog Container */}
@@ -100,7 +104,7 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
               <X size={16} />
             </button>
 
-            {/* Shield / Lock Icon */}
+            {/* Lock Icon */}
             <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-5 text-[#89AACC]">
               <Lock size={24} />
             </div>
@@ -109,7 +113,7 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
               Portfolio Admin Studio
             </h3>
             <p className="text-xs text-white/50 max-w-xs mb-6 uppercase tracking-wider">
-              Enter Owner Passcode to access live visitor analytics, content manager, and code editor.
+              Enter Owner Passcode to access live visitor telemetry, content CMS &amp; code editor.
             </p>
 
             {/* PIN Dots Indicator */}
@@ -150,7 +154,8 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
                   key={num}
                   type="button"
                   onClick={() => handleKeyPress(num)}
-                  className="h-12 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 border border-white/5 text-lg font-medium text-white transition-all flex items-center justify-center"
+                  disabled={loading}
+                  className="h-12 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 border border-white/5 text-lg font-medium text-white transition-all flex items-center justify-center disabled:opacity-40"
                 >
                   {num}
                 </button>
@@ -165,7 +170,8 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleKeyPress('0')}
-                className="h-12 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 border border-white/5 text-lg font-medium text-white transition-all flex items-center justify-center"
+                disabled={loading}
+                className="h-12 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 border border-white/5 text-lg font-medium text-white transition-all flex items-center justify-center disabled:opacity-40"
               >
                 0
               </button>
@@ -193,10 +199,11 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
               />
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-white text-black font-semibold rounded-xl text-xs uppercase tracking-wider hover:bg-[#89AACC] hover:text-white transition-colors flex items-center gap-1.5"
+                disabled={loading}
+                className="px-5 py-2.5 bg-white text-black font-semibold rounded-xl text-xs uppercase tracking-wider hover:bg-[#89AACC] hover:text-white transition-colors flex items-center gap-1.5 disabled:opacity-40"
               >
-                <span>Enter</span>
-                <ArrowRight size={14} />
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <span>Enter</span>}
+                {!loading && <ArrowRight size={14} />}
               </button>
             </form>
 

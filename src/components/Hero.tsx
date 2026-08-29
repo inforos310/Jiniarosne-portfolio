@@ -18,14 +18,15 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
   const roles = hero.roles && hero.roles.length > 0 ? hero.roles : ['Brand Identity Designer'];
   const hlsSource = hero.videoUrl || 'https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8';
 
-  // Initialize HLS video stream
+  // Initialize video stream (HLS or MP4/WebM direct video)
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !hlsSource) return;
 
+    const isHls = hlsSource.includes('.m3u8') || hlsSource.includes('mux.com');
     let hls: Hls | null = null;
 
-    if (Hls.isSupported()) {
+    if (isHls && Hls.isSupported()) {
       hls = new Hls({
         autoStartLoad: true,
         enableWorker: true,
@@ -36,11 +37,16 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(() => {});
       });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = hlsSource;
       video.addEventListener('loadedmetadata', () => {
         video.play().catch(() => {});
       });
+    } else {
+      // Standard video file (MP4, WebM, Supabase storage object)
+      video.src = hlsSource;
+      video.load();
+      video.play().catch(() => {});
     }
 
     return () => {
